@@ -1,0 +1,11 @@
+.git
+.gitignore
+.DS_Store
+.env
+*.md
+LICENSE
+docker-compose.yml
+.dockerignore
+__MACOSX
+storage/*.log
+storage/*.pdf

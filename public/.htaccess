@@ -1,0 +1,19 @@
+RewriteEngine On
+
+# PHP Upload Configuration
+# Increase limits for file uploads (adjust as needed)
+php_value upload_max_filesize 50M
+php_value post_max_size 55M
+php_value memory_limit 256M
+php_value max_execution_time 300
+php_value max_input_time 300
+
+# Redirect root to login page in demo mode
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^$ account/login.php [L]
+
+# Pretty URLs for analytics and viewer
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^a/([A-Za-z0-9]{4,8})$ analytics.php?code=$1 [L,QSA]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^([A-Za-z0-9]{4,8})$ viewer.php?code=$1 [L,QSA]

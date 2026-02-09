@@ -1,0 +1,25 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment & secrets
+.env
+config/db.local.php
+
+# Storage (runtime data)
+storage/*.log
+storage/*.pdf
+storage/uploads/
+
+# Dependencies
+vendor/
+node_modules/
+
+# PDF.js distribution zip (use extracted files only)
+public/static/pdfjs/pdfjs-*.zip

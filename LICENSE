@@ -225,9 +225,17 @@ statute, judicial order, or regulation then You must: (a) comply with
 the terms of this License to the maximum extent possible; and (b)
 describe the limitations and the code they affect. Such description must
 be placed in a text file included with all distributions of the Covered
+<<<<<<< HEAD
 Software under this License. Except to the extent prohibited by statute
 or regulation, such description must be sufficiently detailed for a
 recipient of ordinary skill to be able to understand it.
+=======
+Software under the name "LEGAL", and included in all Source Code Forms
+of the Covered Software and Executable Forms of Covered Software. The
+contents of the LEGAL file are for informational purposes only and do
+not alter the terms of the License. Recipients of the Covered Software
+may not remove or alter any LEGAL notices contained in the file.
+>>>>>>> cda78fa (Initial commit)
 
 5. Termination
 --------------
@@ -357,7 +365,11 @@ Exhibit A - Source Code Form License Notice
 
   This Source Code Form is subject to the terms of the Mozilla Public
   License, v. 2.0. If a copy of the MPL was not distributed with this
+<<<<<<< HEAD
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
+=======
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+>>>>>>> cda78fa (Initial commit)
 
 If it is not possible or desirable to put the notice in a particular
 file, then You may include the notice in a location (such as a LICENSE

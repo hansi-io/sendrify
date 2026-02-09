@@ -1,0 +1,59 @@
+-- Database schema for Sendrify MVP
+
+CREATE TABLE IF NOT EXISTS users (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(191) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS password_resets (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNSIGNED NOT NULL,
+  token_hash CHAR(64) NOT NULL,
+  expires_at DATETIME NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY token_hash_unique (token_hash),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS files (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  short_code CHAR(6) NOT NULL UNIQUE,
+  file_path VARCHAR(255) NOT NULL,
+  original_filename VARCHAR(255) DEFAULT NULL,
+  recipient_pwd_hash VARCHAR(255) NOT NULL,
+  recipient_pwd_plain VARCHAR(32) DEFAULT NULL,
+  sender_pwd_hash VARCHAR(255) NOT NULL,
+  sender_pwd_plain VARCHAR(32) DEFAULT NULL,
+  settings_json JSON NOT NULL,
+  expected_recipients INT UNSIGNED DEFAULT NULL,
+  owner_id INT UNSIGNED DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS page_views (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  file_id INT UNSIGNED NOT NULL,
+  session_id CHAR(36) NOT NULL,
+  ip_hash CHAR(64) NOT NULL,
+  user_agent VARCHAR(255) NOT NULL,
+  started_at DATETIME NOT NULL,
+  last_heartbeat DATETIME NOT NULL,
+  time_spent_ms INT UNSIGNED DEFAULT 0,
+  max_scroll_pct TINYINT UNSIGNED DEFAULT 0,
+  FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE,
+  UNIQUE KEY unique_session (file_id, session_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS events (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  file_id INT UNSIGNED NOT NULL,
+  session_id CHAR(36) NOT NULL,
+  type ENUM('open','heartbeat','scroll','close') NOT NULL,
+  payload JSON NULL,
+  created_at DATETIME NOT NULL,
+  INDEX (file_id, session_id, created_at),
+  FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
