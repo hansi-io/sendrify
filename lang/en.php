@@ -110,7 +110,9 @@ This link expires in 1 hour. If you didn't request it, you can ignore this email
     'reset_pw' => 'Reset password',
     'share_file' => 'Settings',
     'analytics' => 'Analytics',
-    'delete' => 'Delete'
+    'delete' => 'Delete',
+    'no_files' => 'You haven\'t uploaded any files yet:',
+    'link_upload' => 'Upload your first file now',
   ],
   'file' => [
     'title' => 'File dashboard',
