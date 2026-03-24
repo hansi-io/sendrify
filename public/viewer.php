@@ -64,7 +64,7 @@ $filename = basename($file['file_path']);
       z-index:1;
     }
     .card h1 { margin:.25rem 0 1rem; font-size:1.25rem; }
-     .file-note { margin:0 0 .75rem; color:#0f172a; font-size:.95rem; font-weight:600; }
+     .file-note { margin:0 0 .75rem; color:#0f172a; font-size:.95rem; font-weight:600; word-break: break-word; }
     .row { display:flex; gap:.5rem; }
     .consent { margin:.75rem 0 1rem; font-size:.9rem; color:#374151; }
     .consent label { display:flex; gap:.5rem; align-items:flex-start; line-height:1.4; }
