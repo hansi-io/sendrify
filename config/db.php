@@ -6,6 +6,8 @@
  * Database configuration & Security Headers
  */
 
+require_once __DIR__ . '/env.php';
+
 define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
 define('DB_NAME', getenv('DB_NAME') ?: 'sendrify');
 define('DB_USER', getenv('DB_USER') ?: 'root');
