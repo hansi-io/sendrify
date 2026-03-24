@@ -49,9 +49,19 @@ if ($action === 'recipient_login' || $action === 'sender_login') {
     exit; 
   }
   
-  $ok = ($action==='recipient_login')
-        ? password_verify($pwd, $file['recipient_pwd_hash'])
-        : password_verify($pwd, $file['sender_pwd_hash']);
+  if ($action === 'recipient_login') {
+    // Check if password is required
+    if (empty($file['recipient_pwd_hash'])) {
+      // No password set - grant access directly
+      $ok = true;
+    } else {
+      // Password required - verify it
+      $ok = password_verify($pwd, $file['recipient_pwd_hash']);
+    }
+  } else {
+    // Sender login always requires password
+    $ok = password_verify($pwd, $file['sender_pwd_hash']);
+  }
   
   if ($ok) {
     $_SESSION[($action.'_'.$code)] = true;
