@@ -94,7 +94,7 @@ $analyticsUrl = $base . '/analytics.php?code=' . $f['short_code'];
                 <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
               </button>
             <?php else: ?>
-              <em><?php echo  htmlspecialchars(t('analytics.not_available')) ?></em> — <a href="/reset_recipient.php?code=<?php echo  urlencode($f['short_code']) ?>"><?php echo  htmlspecialchars(t('analytics.reset_to_generate')) ?></a>
+              <em style="color: var(--success-color);">✓ <?php echo  htmlspecialchars(t('file.no_password')) ?></em>
             <?php endif; ?>
           </span>
         </p>
@@ -135,7 +135,7 @@ $analyticsUrl = $base . '/analytics.php?code=' . $f['short_code'];
     </div>
 
     <p style="margin-top:1rem">
-      <a class="btn secondary sm" href="/reset_recipient.php?code=<?php echo  urlencode($f['short_code']) ?>"><?php echo  htmlspecialchars(t('admin.reset_pw')) ?></a> <a class="btn ghost sm" href="/delete.php?code=<?php echo  urlencode($f['short_code']) ?>" onclick="return confirm('<?php echo  htmlspecialchars(t('analytics.confirm_delete')) ?>')" style="color: var(--error);"><?php echo  htmlspecialchars(t('admin.delete')) ?></a>
+      <a class="btn secondary sm" href="/reset_recipient.php?code=<?php echo  urlencode($f['short_code']) ?>"><?php echo  htmlspecialchars(t('file.change_password')) ?></a> <a class="btn ghost sm" href="/delete.php?code=<?php echo  urlencode($f['short_code']) ?>" onclick="return confirm('<?php echo  htmlspecialchars(t('analytics.confirm_delete')) ?>')" style="color: var(--error);"><?php echo  htmlspecialchars(t('admin.delete')) ?></a>
     </p>
   </article>
 </main>

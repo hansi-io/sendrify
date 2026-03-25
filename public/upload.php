@@ -116,8 +116,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$err) {
       if (!move_uploaded_file($_FILES['pdf']['tmp_name'], $storePath)) {
         $err = 'Server error moving file.';
       } else {
-        $recipient_plain = bin2hex(random_bytes(2)); // 4 hex chars
-        $sender_plain    = bin2hex(random_bytes(3)); // 6 hex chars
+        // Password generation helper
+        $gen_pwd = function(): string {
+          $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+          $out = '';
+          for ($i = 0; $i < 6; $i++) $out .= $alphabet[random_int(0, strlen($alphabet)-1)];
+          return $out;
+        };
+        
+        // Process password action from radio buttons
+        $password_action = $_POST['password_action'] ?? 'none';
+        $custom_password = trim($_POST['custom_password'] ?? '');
+        $recipient_plain = null;
+        $recipient_hash = null;
+        
+        if ($password_action === 'generate') {
+          // Generate random password
+          $recipient_plain = $gen_pwd();
+          $recipient_hash = password_hash($recipient_plain, PASSWORD_DEFAULT);
+        } elseif ($password_action === 'custom' && !empty($custom_password)) {
+          // Use custom password
+          $recipient_plain = $custom_password;
+          $recipient_hash = password_hash($recipient_plain, PASSWORD_DEFAULT);
+        }
+        // else: password_action === 'none' -> $recipient_plain stays null
+        
+        // Sender password is always generated (for analytics access)
+        $sender_plain = bin2hex(random_bytes(3)); // 6 hex chars
 
         $settings = [
           'track_open' => true,
@@ -142,8 +167,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$err) {
           );
           $ins->execute([
             $code, $storePath, $originalFilename,
-            password_hash($recipient_plain, PASSWORD_DEFAULT), $recipient_plain,
-            password_hash($sender_plain,    PASSWORD_DEFAULT), $sender_plain,
+            $recipient_hash, $recipient_plain,
+            password_hash($sender_plain, PASSWORD_DEFAULT), $sender_plain,
             json_encode($settings),
             $ownerId
           ]);
@@ -159,8 +184,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$err) {
           );
           $ins->execute([
             $code, $storePath, $originalFilename,
-            password_hash($recipient_plain, PASSWORD_DEFAULT), $recipient_plain,
-            password_hash($sender_plain,    PASSWORD_DEFAULT), $sender_plain,
+            $recipient_hash, $recipient_plain,
+            password_hash($sender_plain, PASSWORD_DEFAULT), $sender_plain,
             json_encode($settings)
           ]);
         }
@@ -168,9 +193,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$err) {
 
         $_SESSION['new_file'] = [
           'code'      => $code,
-          'recipient' => $recipient_plain,
+          'recipient' => $recipient_plain, // null if no password set
           'sender'    => $sender_plain,
-          'ts'        => time(),     // optional, helpful for freshness checks later
+          'ts'        => time(),
+          'has_password' => !empty($recipient_plain),
         ];
         header('Location: /upload.php?success=1'); exit;
       }
@@ -187,6 +213,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$err) {
   <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
   <link rel="stylesheet" href="/static/app.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    .radio-group { display: flex; flex-direction: column; gap: 0.75rem; }
+    .radio-option { display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.75rem; border: 1px solid var(--form-element-border-color); border-radius: 8px; cursor: pointer; transition: background 0.15s; }
+    .radio-option:hover { background: var(--form-element-background-color); }
+    .radio-option input[type="radio"] { margin-top: 0.2rem; flex-shrink: 0; }
+    .radio-option-content { flex: 1; }
+    .radio-option-title { font-weight: 600; margin-bottom: 0.25rem; }
+    .radio-option-desc { font-size: 0.875rem; color: var(--muted-color); }
+    .custom-password-field { margin-top: 0.5rem; }
+    .custom-password-field input { width: 100%; }
+  </style>
 </head>
 <body>
 <?php include __DIR__ . '/partials/header.php'; ?>  
@@ -232,6 +269,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$err) {
       </span>
     </p>
 
+    <?php if (!empty($nf['recipient'])): ?>
     <p class="copyline">
       <strong><?php echo  htmlspecialchars(t('upload.password')) ?>:</strong>
       <span class="copyline-field">
@@ -243,6 +281,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$err) {
         </button>
       </span>
     </p>
+    <?php else: ?>
+    <p class="no-password-info">
+      <span style="color: var(--success-color);">✓</span> <?php echo htmlspecialchars(t('upload.no_password_set')) ?>
+    </p>
+    <?php endif; ?>
 
   </div>
 
@@ -383,6 +426,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$err) {
   <!-- Hidden input still used for form submit -->
   <input id="pdfInput" type="file" name="pdf" accept="application/pdf" required style="display:none">
 
+  <!-- Password protection options -->
+  <div class="password-options" style="margin-top: var(--space-lg);">
+    <label style="font-weight: 600; margin-bottom: var(--space-sm); display: block;">
+      <?= htmlspecialchars(t('upload.set_password')) ?>
+    </label>
+    
+    <div class="radio-group">
+      <label class="radio-option">
+        <input type="radio" name="password_action" value="none" checked>
+        <div class="radio-option-content">
+          <div class="radio-option-title"><?= htmlspecialchars(t('upload.option_none')) ?></div>
+          <div class="radio-option-desc"><?= htmlspecialchars(t('upload.option_none_desc')) ?></div>
+        </div>
+      </label>
+      
+      <label class="radio-option">
+        <input type="radio" name="password_action" value="generate">
+        <div class="radio-option-content">
+          <div class="radio-option-title"><?= htmlspecialchars(t('upload.option_generate')) ?></div>
+          <div class="radio-option-desc"><?= htmlspecialchars(t('upload.option_generate_desc')) ?></div>
+        </div>
+      </label>
+      
+      <label class="radio-option">
+        <input type="radio" name="password_action" value="custom" id="customRadio">
+        <div class="radio-option-content">
+          <div class="radio-option-title"><?= htmlspecialchars(t('upload.option_custom')) ?></div>
+          <div class="radio-option-desc"><?= htmlspecialchars(t('upload.option_custom_desc')) ?></div>
+          <div class="custom-password-field">
+            <input type="text" name="custom_password" id="customPasswordInput" 
+                   placeholder="<?= htmlspecialchars(t('upload.custom_placeholder')) ?>"
+                   autocomplete="off">
+          </div>
+        </div>
+      </label>
+    </div>
+  </div>
+
   <button type="submit" class="accent" style="margin-top: var(--space-lg);"><?= htmlspecialchars(t('upload.upload_btn')) ?></button>
 </form>
 
@@ -490,6 +571,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$err) {
   // Actions
   changeBtn.addEventListener('click', () => input.click());
   clearBtn.addEventListener('click', () => setFile(null));
+
+  // Auto-select custom radio when typing in custom password field
+  const customInput = document.getElementById('customPasswordInput');
+  const customRadio = document.getElementById('customRadio');
+  if (customInput && customRadio) {
+    customInput.addEventListener('focus', () => { customRadio.checked = true; });
+    customInput.addEventListener('input', () => { customRadio.checked = true; });
+  }
 
   // Initial state
   syncUI();

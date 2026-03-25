@@ -9,7 +9,7 @@
  */
 
 // Demo mode enabled/disabled
-define('DEMO_MODE', true);
+define('DEMO_MODE', false);
 
 // File lifetime in minutes (files will be deleted after this time)
 define('DEMO_FILE_LIFETIME_MINUTES', 30);

@@ -9,10 +9,13 @@ session_start();
 require_once __DIR__ . '/../config/i18n.php';
 
 $code = $_GET['code'] ?? '';
-$stmt = $pdo->prepare('SELECT id, file_path, settings_json, owner_id FROM files WHERE short_code=?');
+$stmt = $pdo->prepare('SELECT id, file_path, settings_json, owner_id, recipient_pwd_hash FROM files WHERE short_code=?');
 $stmt->execute([$code]);
 $file = $stmt->fetch();
 if (!$file) { http_response_code(404); echo 'Not found'; exit; }
+
+// Check if password protection is enabled
+$hasPassword = !empty($file['recipient_pwd_hash']);
 
 // Owner auto-login to recipient view
 if (function_exists('current_user_id') && current_user_id() && (int)$file['owner_id'] === current_user_id()) {
@@ -92,26 +95,48 @@ $filename = basename($file['file_path']);
   <!-- Minimal, centered login (no header/footer) -->
   <div class="center">
     <div class="card">
-      <h1><?= htmlspecialchars(t('viewer.recipient_password')) ?></h1>
-       <p class="file-note"><?= htmlspecialchars(t('viewer.new_file')) ?><?= htmlspecialchars($filename) ?></p>
-      <?php if (!empty($_GET['e'])): ?><div class="error"><?= htmlspecialchars(t('viewer.wrong_pwd')) ?></div><?php endif; ?>
-      <form method="post" action="/auth.php">
-        <input type="hidden" name="action" value="recipient_login">
-        <input type="hidden" name="code" value="<?= htmlspecialchars($code) ?>">
-        <div class="row">
-          <input type="password" name="password" placeholder="<?= htmlspecialchars(t('viewer.recipient_password')) ?>" required>
-          <button type="submit"><?= htmlspecialchars(t('viewer.open')) ?></button>
-        </div>
-        <div class="consent">
-          <label for="consent">
-            <input type="checkbox" id="consent" name="consent" required>
-            <span>
-              <?= htmlspecialchars(t('viewer.checkbox')) ?>
-              <a href="/privacy.php" target="_blank" rel="noopener noreferrer"><?= htmlspecialchars(t('viewer.link')) ?></a>
-            </span>
-          </label>
-        </div>
-      </form>
+      <?php if ($hasPassword): ?>
+        <!-- Password required -->
+        <h1><?= htmlspecialchars(t('viewer.recipient_password')) ?></h1>
+        <p class="file-note"><?= htmlspecialchars(t('viewer.new_file')) ?><?= htmlspecialchars($filename) ?></p>
+        <?php if (!empty($_GET['e'])): ?><div class="error"><?= htmlspecialchars(t('viewer.wrong_pwd')) ?></div><?php endif; ?>
+        <form method="post" action="/auth.php">
+          <input type="hidden" name="action" value="recipient_login">
+          <input type="hidden" name="code" value="<?= htmlspecialchars($code) ?>">
+          <div class="row">
+            <input type="password" name="password" placeholder="<?= htmlspecialchars(t('viewer.recipient_password')) ?>" required>
+            <button type="submit"><?= htmlspecialchars(t('viewer.open')) ?></button>
+          </div>
+          <div class="consent">
+            <label for="consent">
+              <input type="checkbox" id="consent" name="consent" required>
+              <span>
+                <?= htmlspecialchars(t('viewer.checkbox')) ?>
+                <a href="/privacy.php" target="_blank" rel="noopener noreferrer"><?= htmlspecialchars(t('viewer.link')) ?></a>
+              </span>
+            </label>
+          </div>
+        </form>
+      <?php else: ?>
+        <!-- No password - consent only -->
+        <h1><?= htmlspecialchars(t('viewer.access_document')) ?></h1>
+        <p class="file-note"><?= htmlspecialchars(t('viewer.new_file')) ?><?= htmlspecialchars($filename) ?></p>
+        <form method="post" action="/auth.php">
+          <input type="hidden" name="action" value="recipient_login">
+          <input type="hidden" name="code" value="<?= htmlspecialchars($code) ?>">
+          <input type="hidden" name="password" value="">
+          <div class="consent">
+            <label for="consent">
+              <input type="checkbox" id="consent" name="consent" required>
+              <span>
+                <?= htmlspecialchars(t('viewer.checkbox')) ?>
+                <a href="/privacy.php" target="_blank" rel="noopener noreferrer"><?= htmlspecialchars(t('viewer.link')) ?></a>
+              </span>
+            </label>
+          </div>
+          <button type="submit" style="width:100%; margin-top:0.5rem;"><?= htmlspecialchars(t('viewer.open_document')) ?></button>
+        </form>
+      <?php endif; ?>
     </div>
   </div>
   <script>
